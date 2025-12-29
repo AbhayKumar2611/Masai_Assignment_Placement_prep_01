@@ -1,0 +1,6 @@
+node_modules/
+watch/*
+!watch/.gitkeep
+*.log
+.DS_Store
+
