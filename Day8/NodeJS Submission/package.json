@@ -1,0 +1,19 @@
+{
+  "name": "blog-data-model",
+  "version": "1.0.0",
+  "description": "In-memory data model for a blog system with Users, Posts, and Comments",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "node index.js"
+  },
+  "keywords": [
+    "database",
+    "data-model",
+    "blog",
+    "in-memory"
+  ],
+  "author": "",
+  "license": "ISC"
+}
+
