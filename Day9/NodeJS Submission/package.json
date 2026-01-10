@@ -1,0 +1,19 @@
+{
+  "name": "simple-query-optimizer",
+  "version": "1.0.0",
+  "description": "A simple query optimizer that analyzes query patterns and suggests composite indexes with caching support",
+  "main": "queryOptimizer.js",
+  "scripts": {
+    "start": "node example.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "query-optimizer",
+    "database",
+    "index",
+    "cache",
+    "performance"
+  ],
+  "author": "",
+  "license": "ISC"
+}

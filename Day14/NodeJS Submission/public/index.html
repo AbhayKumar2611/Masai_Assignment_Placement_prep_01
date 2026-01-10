@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-time File Upload Progress Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 10px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ff4444;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.connected {
+            background: #44ff44;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .upload-section {
+            margin-bottom: 30px;
+        }
+
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            background: #f9f9ff;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .upload-area:hover {
+            background: #f0f0ff;
+            border-color: #764ba2;
+        }
+
+        .upload-area.dragover {
+            background: #e8e8ff;
+            border-color: #764ba2;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .file-label {
+            display: inline-block;
+            padding: 15px 30px;
+            background: #667eea;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .file-label:hover {
+            background: #764ba2;
+        }
+
+        .upload-list {
+            margin-top: 30px;
+        }
+
+        .upload-item {
+            background: #f9f9f9;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .upload-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .upload-file-name {
+            font-weight: 600;
+            color: #333;
+            word-break: break-word;
+        }
+
+        .upload-status {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .upload-details {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #666;
+            margin-top: 10px;
+        }
+
+        .cancel-btn {
+            background: #ff4444;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.3s;
+        }
+
+        .cancel-btn:hover {
+            background: #cc0000;
+        }
+
+        .complete-msg {
+            color: #44aa44;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .error-msg {
+            color: #ff4444;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #999;
+            padding: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📤 Real-time File Upload</h1>
+        <p class="subtitle">Track your file upload progress in real-time using Socket.io</p>
+
+        <div class="status-indicator">
+            <div class="status-dot" id="statusDot"></div>
+            <span id="statusText">Connecting...</span>
+        </div>
+
+        <div class="upload-section">
+            <div class="upload-area" id="uploadArea">
+                <p style="margin-bottom: 20px; color: #666;">Drag and drop files here or</p>
+                <label for="fileInput" class="file-label">
+                    Choose Files
+                </label>
+                <input type="file" id="fileInput" multiple>
+            </div>
+        </div>
+
+        <div class="upload-list" id="uploadList">
+            <div class="empty-state">No uploads yet. Select a file to start uploading.</div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        // Connect to Socket.io server
+        const socket = io()
+        const uploadList = document.getElementById('uploadList')
+        const fileInput = document.getElementById('fileInput')
+        const uploadArea = document.getElementById('uploadArea')
+        const statusDot = document.getElementById('statusDot')
+        const statusText = document.getElementById('statusText')
+
+        // Track uploads
+        const uploads = new Map()
+
+        // Socket.io connection status
+        socket.on('connect', () => {
+            statusDot.classList.add('connected')
+            statusText.textContent = `Connected (Socket ID: ${socket.id.substring(0, 8)}...)`
+            console.log('Connected to server with socket ID:', socket.id)
+        })
+
+        socket.on('disconnect', () => {
+            statusDot.classList.remove('connected')
+            statusText.textContent = 'Disconnected'
+            console.log('Disconnected from server')
+        })
+
+        // Handle file selection
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files)
+        })
+
+        // Drag and drop handlers
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault()
+            uploadArea.classList.add('dragover')
+        })
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover')
+        })
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault()
+            uploadArea.classList.remove('dragover')
+            handleFiles(e.dataTransfer.files)
+        })
+
+        // Handle multiple files
+        function handleFiles(files) {
+            Array.from(files).forEach(file => {
+                uploadFile(file)
+            })
+        }
+
+        // Upload file function
+        function uploadFile(file) {
+            const uploadId = `upload-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+            
+            // Create upload item UI (using upload- prefix for element IDs)
+            const uploadItem = createUploadItem(uploadId, file.name, file.size)
+            if (uploadList.querySelector('.empty-state')) {
+                uploadList.innerHTML = '' // Clear empty state
+            }
+            uploadList.appendChild(uploadItem)
+
+            // Store upload info
+            uploads.set(uploadId, {
+                fileName: file.name,
+                fileSize: file.size,
+                startTime: Date.now(),
+                serverUploadId: null // Will be set when server responds
+            })
+
+            // Create FormData
+            const formData = new FormData()
+            formData.append('file', file)
+
+            // Create XMLHttpRequest for upload with progress tracking
+            const xhr = new XMLHttpRequest()
+
+            xhr.addEventListener('load', () => {
+                if (xhr.status === 200) {
+                    const response = JSON.parse(xhr.responseText)
+                    const serverUploadId = response.data.uploadId
+                    
+                    // Update mapping: map server upload ID to client upload ID
+                    const uploadInfo = uploads.get(uploadId)
+                    if (uploadInfo) {
+                        uploadInfo.serverUploadId = serverUploadId
+                        uploads.set(serverUploadId, uploadInfo) // Also store by server ID
+                        
+                        // Update the upload item ID to match server's upload ID for Socket.io events
+                        uploadItem.id = `upload-${serverUploadId}`
+                        const progressBar = uploadItem.querySelector('.progress-bar')
+                        const statusText = uploadItem.querySelector('.upload-status')
+                        const speedText = uploadItem.querySelector('.upload-details span:nth-child(2)')
+                        const timeText = uploadItem.querySelector('.upload-details span:nth-child(3)')
+                        const messageDiv = uploadItem.querySelector('[id$="-message"]')
+                        
+                        if (progressBar) progressBar.id = `upload-${serverUploadId}-progress`
+                        if (statusText) statusText.id = `upload-${serverUploadId}-status`
+                        if (speedText) speedText.id = `upload-${serverUploadId}-speed`
+                        if (timeText) timeText.id = `upload-${serverUploadId}-time`
+                        if (messageDiv) messageDiv.id = `upload-${serverUploadId}-message`
+                        
+                        // Update cancel button
+                        const cancelBtn = uploadItem.querySelector('.cancel-btn')
+                        if (cancelBtn) {
+                            cancelBtn.setAttribute('onclick', `cancelUpload('${serverUploadId}')`)
+                        }
+                    }
+                    
+                    console.log('Upload started:', serverUploadId)
+                } else {
+                    handleUploadError(uploadId, 'Failed to start upload')
+                }
+            })
+
+            xhr.addEventListener('error', () => {
+                handleUploadError(uploadId, 'Network error')
+            })
+
+            // Send request with socket ID and upload ID headers
+            xhr.open('POST', '/api/upload')
+            xhr.setRequestHeader('X-Socket-Id', socket.id)
+            xhr.setRequestHeader('X-Upload-Id', uploadId)
+            xhr.send(formData)
+        }
+
+        // Create upload item UI
+        function createUploadItem(uploadId, fileName, fileSize) {
+            const item = document.createElement('div')
+            item.className = 'upload-item'
+            item.id = uploadId
+
+            const fileSizeKB = (fileSize / 1024).toFixed(2)
+            const fileSizeMB = (fileSize / (1024 * 1024)).toFixed(2)
+            const sizeText = fileSize > 1024 * 1024 ? `${fileSizeMB} MB` : `${fileSizeKB} KB`
+
+            item.innerHTML = `
+                <div class="upload-header">
+                    <div>
+                        <div class="upload-file-name">${fileName}</div>
+                        <div class="upload-status" id="${uploadId}-status">Waiting to start...</div>
+                    </div>
+                    <button class="cancel-btn" onclick="cancelUpload('${uploadId}')">Cancel</button>
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" id="${uploadId}-progress" style="width: 0%">0%</div>
+                </div>
+                <div class="upload-details">
+                    <span>Size: ${sizeText}</span>
+                    <span id="${uploadId}-speed">Speed: 0 KB/s</span>
+                    <span id="${uploadId}-time">Time: 0s</span>
+                </div>
+                <div id="${uploadId}-message"></div>
+            `
+
+            return item
+        }
+
+        // Socket.io event listeners for real-time progress
+        socket.on('upload-progress', (data) => {
+            const { uploadId, fileName, percentage, bytesUploaded, totalBytes, speed, duration } = data
+
+            // Find the upload item by server upload ID
+            const uploadItem = document.getElementById(`upload-${uploadId}`)
+            if (!uploadItem) {
+                console.warn(`Upload item not found for uploadId: ${uploadId}`)
+                return
+            }
+
+            const progressBar = document.getElementById(`upload-${uploadId}-progress`)
+            const statusText = document.getElementById(`upload-${uploadId}-status`)
+            const speedText = document.getElementById(`upload-${uploadId}-speed`)
+            const timeText = document.getElementById(`upload-${uploadId}-time`)
+
+            if (progressBar && statusText) {
+                progressBar.style.width = `${percentage}%`
+                progressBar.textContent = `${percentage}%`
+                statusText.textContent = `Uploading... ${percentage}%`
+                
+                if (speed && speedText) {
+                    speedText.textContent = `Speed: ${speed}`
+                }
+                
+                if (duration && timeText) {
+                    timeText.textContent = `Time: ${duration}s`
+                }
+            }
+        })
+
+        socket.on('upload-complete', (data) => {
+            const { uploadId, fileName, filePath, fileSize, duration, averageSpeed } = data
+
+            const uploadItem = document.getElementById(`upload-${uploadId}`)
+            if (uploadItem) {
+                const statusText = document.getElementById(`upload-${uploadId}-status`)
+                const messageDiv = document.getElementById(`upload-${uploadId}-message`)
+                const cancelBtn = uploadItem.querySelector('.cancel-btn')
+
+                if (statusText) {
+                    statusText.textContent = 'Completed!'
+                    statusText.style.color = '#44aa44'
+                }
+                
+                if (cancelBtn) {
+                    cancelBtn.style.display = 'none'
+                }
+
+                if (messageDiv) {
+                    messageDiv.innerHTML = `
+                        <div class="complete-msg">
+                            ✅ Upload completed successfully! 
+                            File: <a href="${filePath}" target="_blank">${fileName}</a>
+                            <br>
+                            Duration: ${duration}s | Average Speed: ${averageSpeed}
+                        </div>
+                    `
+                }
+
+                // Remove from active uploads after 5 seconds
+                setTimeout(() => {
+                    uploads.delete(uploadId)
+                }, 5000)
+            } else {
+                console.warn(`Upload item not found for completed upload: ${uploadId}`)
+            }
+
+            console.log('Upload completed:', data)
+        })
+
+        socket.on('upload-error', (data) => {
+            const { uploadId, fileName, error } = data
+            handleUploadError(uploadId, error)
+        })
+
+        socket.on('upload-cancelled', (data) => {
+            const { uploadId } = data
+            const uploadItem = document.getElementById(`upload-${uploadId}`)
+            if (uploadItem) {
+                const statusText = document.getElementById(`upload-${uploadId}-status`)
+                const messageDiv = document.getElementById(`upload-${uploadId}-message`)
+                const cancelBtn = uploadItem.querySelector('.cancel-btn')
+
+                if (statusText) {
+                    statusText.textContent = 'Cancelled'
+                    statusText.style.color = '#ff4444'
+                }
+                
+                if (cancelBtn) {
+                    cancelBtn.style.display = 'none'
+                }
+
+                if (messageDiv) {
+                    messageDiv.innerHTML = `
+                        <div class="error-msg">❌ Upload cancelled by user</div>
+                    `
+                }
+
+                uploads.delete(uploadId)
+            }
+        })
+
+        // Handle upload error
+        function handleUploadError(uploadId, error) {
+            const uploadItem = document.getElementById(`upload-${uploadId}`)
+            if (uploadItem) {
+                const statusText = document.getElementById(`upload-${uploadId}-status`)
+                const messageDiv = document.getElementById(`upload-${uploadId}-message`)
+                const cancelBtn = uploadItem.querySelector('.cancel-btn')
+
+                if (statusText) {
+                    statusText.textContent = 'Failed'
+                    statusText.style.color = '#ff4444'
+                }
+                
+                if (cancelBtn) {
+                    cancelBtn.style.display = 'none'
+                }
+
+                if (messageDiv) {
+                    messageDiv.innerHTML = `
+                        <div class="error-msg">❌ Upload failed: ${error}</div>
+                    `
+                }
+
+                uploads.delete(uploadId)
+            }
+        }
+
+        // Cancel upload function (uses server upload ID)
+        window.cancelUpload = function(uploadId) {
+            socket.emit('cancel-upload', { uploadId })
+        }
+
+        // Format file size
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes'
+            const k = 1024
+            const sizes = ['Bytes', 'KB', 'MB', 'GB']
+            const i = Math.floor(Math.log(bytes) / Math.log(k))
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i]
+        }
+    </script>
+</body>
+</html>
+
