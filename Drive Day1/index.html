@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Assignement 1</title>
+  <style>
+    * {
+      padding: 0;
+      margin: 0;
+    }
+
+    .part1 {
+      border: 2px solid black;
+      height: 180px;
+      width: 100%;
+      padding: 10px 10px;
+    }
+
+    .part1_Console {
+      border: 1px solid black;
+      height: 80px;
+      width: 90%;
+      margin-top: 20px;
+      padding: 5px 10px;
+      background: rgb(66, 139, 111);
+      color: wheat;
+      font-size: large;
+      font-weight: bold;
+    }
+
+    .part1 button {
+      margin-top: 10px;
+      margin-left: 10px;
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+
+    .part2 {
+      border: 2px solid black;
+      height: 150px;
+      width: 100%;
+      padding: 10px 10px;
+      margin-top: 10px;
+    }
+
+    .newDiv1 {
+      border: 1px solid black;
+      padding: 5px 10px;
+      margin-top: 10px;
+    }
+
+    .newDiv2 {
+      border: 1px solid black;
+      padding: 5px 10px;
+      margin-top: 10px;
+    }
+
+    .errBtn {
+      padding: 5px 10px;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+
+    .noErrBtn {
+      padding: 5px 10px;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+
+    .part3 {
+      border: 2px solid black;
+      height: 100px;
+      width: 100%;
+      padding: 10px 10px;
+      margin-top: 10px;
+    }
+
+    .counterDiv {
+      height: 50px;
+      border: 1px solid black;
+      display: flex;
+      align-items: center;
+    }
+
+    .btn1 {
+      padding: 5px 20px;
+      cursor: pointer;
+      margin-right: 10px;
+      font-size: larger;
+    }
+
+    .btn2 {
+      padding: 5px 20px;
+      cursor: pointer;
+      margin-right: 10px;
+      font-size: larger;
+    }
+
+    .resEl {
+      margin-right: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="part1">
+    <h2>Part 1: The Hoisting Experiment</h2>
+    <!-- Our Task is to create a button that will show how hoisy=ting works in the case of var,let,const when they are accessed before declaration -->
+    <button id="testHoistBtn">Test Hoisting</button>
+    <div class="part1_Console" id="part1_Console"></div>
+  </div>
+  <div class="part2" id="part2">
+    <h2>Part 2: The Closure Loop (The "Buggy" Buttons)</h2>
+  </div>
+  <div class="part3" id="part3">
+    <h2>Part 3: The Private Counter-(Closures)</h2>
+  </div>
+</body>
+
+</html>
+<script>
+  // Part 1: The Hoisting Experiment Create a function called runHoistingTest() that triggers when a "Test Hoisting" button is clicked. Inside this function, attempt to access three variables (var, let, const) before they are declared in the code.
+
+  // You must wrap the let and const access attempts in try...catch blocks to handle the Temporal Dead Zone errors without crashing the script.
+  // Print the results to a specific "Console Output" div on the page. You should successfully show that var is undefined (hoisted) while let/const throw errors.
+
+  const testHoistBtn = document.getElementById("testHoistBtn");
+  const part1Console = document.getElementById("part1_Console");
+
+  testHoistBtn.addEventListener("click", (e) => {
+    runHoistingTest();
+  });
+
+  function runHoistingTest() {
+    //   console.log(a)
+    //   console.log(b)
+    //   console.log(c)
+
+    let varResult = `var before declaration:- ${a}`;
+    let letResult = ``;
+    let constResult = ``;
+
+    try {
+      letResult = `let before declaration:- ${b}`;
+    } catch (err) {
+      letResult = `let before declaration:- ${err}`;
+    }
+
+    try {
+      constResult = `const before declaration:- ${c}`;
+    } catch (err) {
+      constResult = `const before declaration:- ${err}`;
+    }
+
+    part1Console.innerHTML = `${varResult} <br> ${letResult} <br> ${constResult}`;
+
+    var a = 10;
+    let b = 20;
+    const c = 30;
+  }
+
+  // Part 2: The Closure Loop (The "Buggy" Buttons) Dynamically generate 5 buttons labeled "Button 1" through "Button 5" inside a container.
+
+  // 1. The Bug: First, write a loop using var to create these buttons and add a click event listener that alerts the button's number. (Demonstrate the common issue where all buttons alert "Button 6").
+  // 2. The Fix: Create a second set of 5 buttons. This time, fix the issue using a Closure (e.g., an IIFE or a separate factory function) so that each button alerts the correct number. Note: Do not just swap var for let here; you must demonstrate a closure-based fix.
+
+  const part2 = document.getElementById("part2");
+  const newDiv1 = document.createElement("div");
+  newDiv1.className = "newDiv1";
+
+  for (var i = 1; i <= 5; i++) {
+    const btn = document.createElement("button");
+    btn.className = "errBtn";
+    btn.textContent = `Button ${i}`;
+    btn.addEventListener("click", (e) => {
+      alert(`Button ${i}`);
+    });
+    newDiv1.appendChild(btn);
+  }
+  part2.appendChild(newDiv1);
+
+  const newDiv2 = document.createElement("div");
+  newDiv2.className = "newDiv2";
+
+  function clickHandler(i) {
+    console.log("created handler for", i);
+    return () => {
+      alert(`Button ${i}`);
+    };
+  }
+
+  for (var i = 1; i <= 5; i++) {
+    const btn = document.createElement("button");
+    btn.className = "noErrBtn";
+    btn.textContent = `Button ${i}`;
+    btn.addEventListener("click", clickHandler(i));
+    newDiv2.appendChild(btn);
+  }
+  part2.appendChild(newDiv2);
+
+  // Part 3: The Private Counter Implement a createCounter() function using closures to mimic private state. It should return an object with increment(), decrement(), and getValue().
+
+  // The actual count variable must not be accessible directly from the global scope.
+  // Connect this logic to a simple UI with "+" and "-" buttons to demonstrate the state persisting.
+  const part3 = document.getElementById("part3")
+  const counterDiv = document.createElement("div")
+  counterDiv.className = "counterDiv"
+
+  const btn1 = document.createElement("button")
+  const btn2 = document.createElement("button")
+  btn1.className = "btn1"
+  btn2.className = "btn2"
+
+  btn1.textContent = "+"
+  btn2.textContent = "-"
+
+  let resEl = document.createElement("h3")
+  resEl.className = "resEl"
+
+  resEl.textContent = "0"
+
+  counterDiv.appendChild(btn1)
+  counterDiv.appendChild(resEl)
+  counterDiv.appendChild(btn2)
+
+  part3.appendChild(counterDiv)
+
+  function createCounter() {
+    let count = 0;  // Private variable - only accessible through closure
+
+    return {
+      increment: function () {
+        count++;
+      },
+      decrement: function () {
+        count--;
+      },
+      getValue: function () {
+        return count;
+      }
+    }
+  }
+
+  // Create counter instance
+  const counter = createCounter();
+
+  // Connect buttons to counter
+  btn1.addEventListener("click", () => {
+    counter.increment();
+    resEl.textContent = counter.getValue();
+  });
+
+  btn2.addEventListener("click", () => {
+    counter.decrement();
+    resEl.textContent = counter.getValue();
+  });
+
+</script>

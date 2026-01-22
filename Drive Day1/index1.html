@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ScopeQuest — Hoisting & Closures</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    section {
+      border: 1px solid #ccc;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+    button {
+      margin: 5px;
+      padding: 6px 10px;
+      cursor: pointer;
+    }
+    #output {
+      background: #111;
+      color: #0f0;
+      padding: 10px;
+      min-height: 80px;
+      font-family: monospace;
+      white-space: pre-line;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>ScopeQuest — Hoisting & Closure Lab</h1>
+
+  <!-- PART 1 -->
+  <section>
+    <h2>Part 1: Hoisting Experiment</h2>
+    <button onclick="runHoistingTest()">Test Hoisting</button>
+    <div id="output"></div>
+  </section>
+
+  <!-- PART 2 -->
+  <section>
+    <h2>Part 2: Closure Loop (Buggy vs Fixed)</h2>
+    <h4>Buggy Buttons (var)</h4>
+    <div id="buggy-buttons"></div>
+
+    <h4>Fixed Buttons (Closure)</h4>
+    <div id="fixed-buttons"></div>
+  </section>
+
+  <!-- PART 3 -->
+  <section>
+    <h2>Part 3: Private Counter (Closure)</h2>
+    <button id="decrement">-</button>
+    <span id="counter-value">0</span>
+    <button id="increment">+</button>
+  </section>
+
+  <!-- EXTRA -->
+  <section>
+    <h2>Extras</h2>
+    <button onclick="testBlockScope()">Block Scope Visualizer</button>
+    <button id="timerBtn">Execution Timer</button>
+  </section>
+
+<script>
+/* ---------------------------
+   PART 1: HOISTING TEST
+----------------------------*/
+function runHoistingTest() {
+  const output = document.getElementById("output");
+  output.textContent = "";
+
+  // var
+  output.textContent += "var before declaration: " + testVar + "\n";
+
+  try {
+    output.textContent += testLet;
+  } catch (err) {
+    output.textContent += "let before declaration error: " + err.message + "\n";
+  }
+
+  try {
+    output.textContent += testConst;
+  } catch (err) {
+    output.textContent += "const before declaration error: " + err.message + "\n";
+  }
+
+  var testVar = "I am var";
+  let testLet = "I am let";
+  const testConst = "I am const";
+}
+
+/* ---------------------------
+   PART 2: BUGGY BUTTONS
+----------------------------*/
+const buggyContainer = document.getElementById("buggy-buttons");
+
+for (var i = 1; i <= 5; i++) {
+  const btn = document.createElement("button");
+  btn.textContent = "Button " + i;
+  btn.addEventListener("click", function () {
+    alert("Button " + i);
+  });
+  buggyContainer.appendChild(btn);
+}
+
+/* ---------------------------
+   PART 2: FIX USING CLOSURE
+----------------------------*/
+const fixedContainer = document.getElementById("fixed-buttons");
+
+for (var i = 1; i <= 5; i++) {
+  (function (num) {
+    const btn = document.createElement("button");
+    btn.textContent = "Button " + num;
+    btn.addEventListener("click", function () {
+      alert("Button " + num);
+    });
+    fixedContainer.appendChild(btn);
+  })(i);
+}
+
+/* ---------------------------
+   PART 3: PRIVATE COUNTER
+----------------------------*/
+function createCounter() {
+  let count = 0;
+
+  return {
+    increment() {
+      count++;
+      return count;
+    },
+    decrement() {
+      count--;
+      return count;
+    },
+    getValue() {
+      return count;
+    }
+  };
+}
+
+const counter = createCounter();
+const valueEl = document.getElementById("counter-value");
+
+document.getElementById("increment").onclick = () => {
+  valueEl.textContent = counter.increment();
+};
+
+document.getElementById("decrement").onclick = () => {
+  valueEl.textContent = counter.decrement();
+};
+
+/* ---------------------------
+   EXTRA: BLOCK SCOPE
+----------------------------*/
+function testBlockScope() {
+  try {
+    {
+      let secret = "Inside block";
+    }
+    alert(secret);
+  } catch (err) {
+    alert("Block scope error: " + err.message);
+  }
+}
+
+/* ---------------------------
+   EXTRA: EXECUTION TIMER
+----------------------------*/
+const createTimer = (function () {
+  const startTime = Date.now();
+  return function () {
+    const seconds = Math.floor((Date.now() - startTime) / 1000);
+    alert(seconds + " seconds since page load");
+  };
+})();
+
+document.getElementById("timerBtn").onclick = createTimer;
+</script>
+
+</body>
+</html>
