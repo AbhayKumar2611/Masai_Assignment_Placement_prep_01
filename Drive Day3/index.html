@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShopQuest - E-Commerce App</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <h1 class="logo">🛍️ ShopQuest</h1>
+            <div class="header-actions">
+                <div class="auth-section" id="authSection">
+                    <button class="btn btn-primary" id="loginBtn">Login</button>
+                </div>
+                <div class="cart-icon" id="cartIcon">
+                    <span>🛒</span>
+                    <span class="cart-count" id="cartCount">0</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Login Modal -->
+    <div class="modal" id="loginModal">
+        <div class="modal-content">
+            <span class="close" id="closeLoginModal">&times;</span>
+            <h2>Login</h2>
+            <form id="loginForm">
+                <input type="text" id="username" placeholder="Username" required>
+                <input type="password" id="password" placeholder="Password" required>
+                <button type="submit" class="btn btn-primary">Login</button>
+            </form>
+            <div class="error-message" id="loginError"></div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <main class="container main-content">
+        <!-- Search and Filters -->
+        <section class="filters-section">
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="Search products...">
+                <button class="btn btn-secondary" id="searchBtn">Search</button>
+            </div>
+            <div class="search-history" id="searchHistory"></div>
+            <div class="filter-controls">
+                <select id="categoryFilter">
+                    <option value="">All Categories</option>
+                </select>
+                <select id="sortFilter">
+                    <option value="default">Default</option>
+                    <option value="price-asc">Price: Low to High</option>
+                    <option value="price-desc">Price: High to Low</option>
+                    <option value="title-asc">Title: A to Z</option>
+                    <option value="title-desc">Title: Z to A</option>
+                </select>
+            </div>
+        </section>
+
+        <!-- Loading State -->
+        <div class="loading" id="loadingState">
+            <div class="spinner"></div>
+            <p>Loading products...</p>
+        </div>
+
+        <!-- Error State -->
+        <div class="error-state" id="errorState" style="display: none;">
+            <p id="errorMessage"></p>
+            <button class="btn btn-primary" id="retryBtn">Retry</button>
+        </div>
+
+        <!-- Cache Indicator -->
+        <div class="cache-indicator" id="cacheIndicator" style="display: none;">
+            ⚠️ Showing cached data (offline mode)
+        </div>
+
+        <!-- Products Grid -->
+        <section class="products-section" id="productsSection">
+            <div class="products-grid" id="productsGrid"></div>
+            <div class="pagination" id="pagination"></div>
+        </section>
+    </main>
+
+    <!-- Cart Sidebar -->
+    <aside class="cart-sidebar" id="cartSidebar">
+        <div class="cart-header">
+            <h2>Your Cart</h2>
+            <button class="close-cart" id="closeCart">&times;</button>
+        </div>
+        <div class="cart-items" id="cartItems"></div>
+        <div class="cart-footer">
+            <div class="cart-total">
+                <strong>Total: $<span id="cartTotal">0.00</span></strong>
+            </div>
+            <button class="btn btn-primary btn-block" id="checkoutBtn" disabled>Checkout</button>
+        </div>
+    </aside>
+
+    <!-- Product Details Modal -->
+    <div class="modal" id="productModal">
+        <div class="modal-content modal-large">
+            <span class="close" id="closeProductModal">&times;</span>
+            <div id="productDetails"></div>
+        </div>
+    </div>
+
+    <!-- Developer Panel -->
+    <div class="dev-panel" id="devPanel">
+        <div class="dev-panel-header">
+            <h3>Developer Panel</h3>
+            <button class="toggle-panel" id="toggleDevPanel">−</button>
+        </div>
+        <div class="dev-panel-content" id="devPanelContent">
+            <div class="api-requests" id="apiRequests"></div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
